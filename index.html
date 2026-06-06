@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeyondPrime64 — A geometric sieve beyond 64-bit</title>
+  <meta name="description" content="GC-60: an original prime generation framework based on passive geometric projection. Deterministic prime search beyond 64-bit, up to 10²⁷ and beyond." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple-50: #EEEDFE;
+      --purple-200: #AFA9EC;
+      --purple-400: #7F77DD;
+      --purple-600: #534AB7;
+      --purple-800: #3C3489;
+      --purple-900: #26215C;
+      --bg-page: #09090f;
+      --bg-nav: #0d0d1a;
+      --bg-card: #111120;
+      --bg-card-hover: #161628;
+      --border: #1e1e3a;
+      --border-accent: #2e2e52;
+      --text-primary: #e8e4ff;
+      --text-secondary: #8888aa;
+      --text-muted: #555570;
+      --font-sans: 'Syne', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-Inter);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── COOKIE BAR ── */
+    #cookie-bar {
+      background: #0a0a18;
+      border-bottom: 0.5px solid var(--border-accent);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    #cookie-bar a {
+      color: var(--purple-400);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .cookie-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-cookie {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      border: 0.5px solid var(--border-accent);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .btn-cookie:hover { color: var(--text-secondary); border-color: #444; }
+    .btn-cookie.accept {
+      background: var(--purple-600);
+      border-color: var(--purple-600);
+      color: #fff;
+    }
+    .btn-cookie.accept:hover { background: var(--purple-400); border-color: var(--purple-400); }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--bg-nav);
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 58px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--purple-200);
+      letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--purple-400); }
+    .nav-links {
+      display: flex;
+      gap: 2px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 13px;
+      padding: 6px 13px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: block;
+    }
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--purple-200);
+      background: rgba(127,119,221,0.08);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 72px 32px 64px;
+      border-bottom: 0.5px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -80px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(83,74,183,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--purple-400);
+      background: rgba(83,74,183,0.12);
+      border: 0.5px solid rgba(83,74,183,0.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: 38px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 20px;
+      max-width: 600px;
+      letter-spacing: -0.02em;
+    }
+    .hero h1 em {
+      color: var(--purple-400);
+      font-style: normal;
+    }
+    .hero p {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin-bottom: 36px;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--purple-600);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 24px;
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--purple-400); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--purple-200);
+      border: 0.5px solid rgba(83,74,183,0.5);
+      border-radius: 8px;
+      padding: 11px 24px;
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--purple-400);
+      color: var(--purple-400);
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 48px 32px;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .section h2 {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .section > p {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 580px;
+    }
+
+    /* ── CARDS ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-decoration: none;
+      display: block;
+      transition: all 0.18s;
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+    .card-icon {
+      font-size: 22px;
+      color: var(--purple-400);
+      margin-bottom: 14px;
+      display: block;
+    }
+    .card h3 {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ── STATS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .stat {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--purple-400);
+      margin-bottom: 6px;
+    }
+    .stat-lbl {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* ── ABOUT STRIP ── */
+    .about-strip {
+      padding: 40px 32px;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .about-strip .label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      min-width: 100px;
+      padding-top: 3px;
+    }
+    .about-strip p {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 520px;
+    }
+    .about-strip p strong {
+      color: var(--purple-200);
+      font-weight: 500;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 0.5px solid var(--border);
+    }
+    .footer-left {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .footer-left a { color: var(--purple-400); text-decoration: none; }
+    .footer-left a:hover { color: var(--purple-200); }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <!-- COOKIE BAR -->
+  <div id="cookie-bar">
+    <span>
+      This site uses cookies for basic analytics. No personal data is sold or shared.
+      Read our <a href="privacy.html">Privacy Policy</a>.
+    </span>
+    <div class="cookie-actions">
+      <button class="btn-cookie decline" onclick="dismissCookie()">Decline</button>
+      <button class="btn-cookie accept" onclick="dismissCookie()">Accept</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="nav-logo">beyond<span>prime64</span>.org</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="framework.html">Framework</a></li>
+      <li><a href="microprime.html">MicroPrime</a></li>
+      <li><a href="m30x3.html">M30x3</a></li>
+      <li><a href="analysis.html">Analysis</a></li>
+      <li><a href="resources.html">Resources</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-tag">
+      <i class="ti ti-atom"></i>
+      Original research · Prime number theory
+    </div>
+    <h1>A geometric sieve<br>that goes <em>beyond 64-bit</em></h1>
+    <p>
+      GC-60 is an original prime generation framework based on passive geometric projection.
+      Unlike probabilistic methods, it operates deterministically across ranges unreachable
+      by standard 64-bit sieves — up to 10²¹ and beyond.
+    </p>
+    <div class="hero-btns">
+      <a href="framework.html" class="btn-primary">Explore the framework</a>
+      <a href="microprime.html" class="btn-secondary">View benchmarks</a>
+    </div>
+  </section>
+
+  <!-- PROGRAMS -->
+  <section class="section">
+    <div class="section-label">Programs</div>
+    <h2>Two implementations, one framework</h2>
+    <p>
+      This site documents the GC-60 framework and its two main programs,
+      including benchmark data, source code, and prime analysis.
+    </p>
+    <div class="cards">
+      <a href="microprime.html" class="card">
+        <i class="ti ti-atom card-icon" aria-hidden="true"></i>
+        <h3>MicroPrime_suffix</h3>
+        <p>Deterministic prime search beyond 64-bit using __int128. Benchmarked at ranges 10²¹–10²⁷.</p>
+      </a>
+      <a href="m30x3.html" class="card">
+        <i class="ti ti-chart-bar card-icon" aria-hidden="true"></i>
+        <h3>GC60_M30x3_suffix</h3>
+        <p>Fast prime counting via three parallel binaries, cache-optimised and multi-core, up to 10¹¹.</p>
+      </a>
+      <a href="framework.html" class="card">
+        <i class="ti ti-math-function card-icon" aria-hidden="true"></i>
+        <h3>GC-60 framework</h3>
+        <p>16 residue offsets mod 30. Passive projection via fixed stamps. No active marking of composites.</p>
+      </a>
+      <a href="analysis.html" class="card">
+        <i class="ti ti-chart-dots card-icon" aria-hidden="true"></i>
+        <h3>Prime analysis</h3>
+        <p>Gap distributions, density curves, and statistical analysis across explored ranges.</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="section">
+    <div class="section-label">At a glance</div>
+    <h2>Key results</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val">10²⁷</div>
+        <div class="stat-lbl">Max exploration range</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">__int128</div>
+        <div class="stat-lbl">Arithmetic precision</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">16</div>
+        <div class="stat-lbl">Residue offsets mod 30</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">3 cores</div>
+        <div class="stat-lbl">Parallel execution (M30x3)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">v1.0.0</div>
+        <div class="stat-lbl">Current release on Zenodo</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT STRIP -->
+  <section class="about-strip">
+    <span class="label">About</span>
+    <p>
+      GC-60 is developed by <strong>Claudio Govi</strong> as an independent research project.
+      The framework explores a structural property of prime numbers through passive geometric projection —
+      a method that differs fundamentally from classical sieves. All source code and documentation
+      are published openly on <a href="https://github.com" style="color:var(--purple-400)">GitHub</a>
+      and archived with a DOI on <a href="https://zenodo.org" style="color:var(--purple-400)">Zenodo</a>.
+    </p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      © 2025 Cláudio Duarte ·
+      <a href="https://zenodo.org" target="_blank">Zenodo</a> ·
+      <a href="https://github.com" target="_blank">GitHub</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy policy</a></li>
+      <li><a href="#" onclick="document.getElementById('cookie-bar').style.display='flex'">Cookie settings</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    function dismissCookie() {
+      document.getElementById('cookie-bar').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>

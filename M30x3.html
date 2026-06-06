@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GC60-M30x3-suffix — BeyondPrime64</title>
+  <meta name="description" content="GC60-M30x3-suffix: a faster GC-60 sieve using three parallel binaries. Reaches 10²⁶ in 53 minutes and 10²⁷ in just over 3 hours on consumer hardware." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple-200: #AFA9EC;
+      --purple-400: #7F77DD;
+      --purple-600: #534AB7;
+      --teal-400: #1D9E75;
+      --teal-200: #5DCAA5;
+      --bg-page: #09090f;
+      --bg-nav: #0d0d1a;
+      --bg-card: #111120;
+      --bg-card-hover: #161628;
+      --border: #1e1e3a;
+      --border-accent: #2e2e52;
+      --text-primary: #e8e4ff;
+      --text-secondary: #8888aa;
+      --text-muted: #555570;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background: var(--bg-page); color: var(--text-primary); line-height: 1.6; }
+
+    nav {
+      background: var(--bg-nav);
+      border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 58px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--purple-200); text-decoration: none; }
+    .nav-logo span { color: var(--purple-400); }
+    .nav-links { display: flex; gap: 2px; list-style: none; }
+    .nav-links a { color: var(--text-secondary); font-size: 13px; padding: 6px 13px; border-radius: 6px; text-decoration: none; transition: all 0.15s; display: block; }
+    .nav-links a:hover, .nav-links a.active { color: var(--purple-200); background: rgba(127,119,221,0.08); }
+
+    .page-header {
+      padding: 56px 32px 40px; border-bottom: 0.5px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .page-header::before {
+      content: ''; position: absolute; top: -100px; right: -60px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(29,158,117,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .breadcrumb { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--purple-400); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+    .page-header h1 { font-size: 32px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 12px; }
+    .page-header h1 em { color: var(--teal-200); font-style: normal; font-family: var(--font-mono); font-size: 24px; }
+    .page-header .subtitle { font-size: 14px; color: var(--text-secondary); max-width: 640px; line-height: 1.75; margin-bottom: 24px; }
+    .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { font-family: var(--font-mono); font-size: 11px; border-radius: 20px; padding: 3px 12px; }
+    .tag-purple { color: var(--purple-400); background: rgba(83,74,183,0.10); border: 0.5px solid rgba(83,74,183,0.30); }
+    .tag-teal { color: var(--teal-200); background: rgba(29,158,117,0.10); border: 0.5px solid rgba(29,158,117,0.30); }
+
+    .section { padding: 44px 32px; border-bottom: 0.5px solid var(--border); }
+    .section-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .section h2 { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-bottom: 14px; letter-spacing: -0.01em; }
+    .section p { font-size: 14px; line-height: 1.8; color: var(--text-secondary); max-width: 680px; margin-bottom: 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    .section p strong { color: var(--purple-200); font-weight: 500; }
+
+    .concept-box {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border-accent);
+      border-left: 2px solid var(--teal-400);
+      border-radius: 0 10px 10px 0;
+      padding: 20px 24px; margin-top: 24px; max-width: 680px;
+    }
+    .concept-box .mono-label { font-family: var(--font-mono); font-size: 11px; color: var(--teal-200); margin-bottom: 10px; letter-spacing: 0.05em; }
+    .concept-box p { font-size: 13.5px; line-height: 1.75; color: var(--text-secondary); margin: 0; max-width: none; }
+
+    /* X3 DIAGRAM */
+    .x3-diagram {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 24px;
+      max-width: 620px;
+    }
+    .x3-bin {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border-accent);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .x3-bin .bin-name { font-family: var(--font-mono); font-size: 13px; color: var(--teal-200); font-weight: 500; margin-bottom: 6px; }
+    .x3-bin .bin-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+
+    /* PHASES */
+    .phases { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .phase {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+    }
+    .phase-num {
+      font-family: var(--font-mono); font-size: 12px; color: var(--teal-200);
+      background: rgba(29,158,117,0.10); border: 0.5px solid rgba(29,158,117,0.25);
+      border-radius: 6px; padding: 2px 9px; flex-shrink: 0; margin-top: 2px;
+    }
+    .phase h4 { font-size: 13.5px; font-weight: 500; color: var(--text-primary); margin-bottom: 5px; }
+    .phase p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; max-width: none; margin: 0; }
+
+    /* HARDWARE */
+    .hw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 20px; }
+    .hw-item { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+    .hw-label { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    .hw-val { font-size: 13.5px; color: var(--text-primary); font-weight: 500; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; margin-top: 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--font-mono); }
+    thead tr { border-bottom: 0.5px solid var(--border-accent); }
+    thead th { text-align: left; padding: 10px 16px; font-size: 11px; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 400; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.12s; }
+    tbody tr:hover { background: var(--bg-card); }
+    tbody td { padding: 11px 16px; color: var(--text-secondary); }
+    tbody td:first-child { color: var(--teal-200); }
+    tbody td.highlight { color: var(--text-primary); }
+
+    /* OUTPUT BOX */
+    .output-box {
+      background: #050510;
+      border: 0.5px solid var(--border-accent);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-top: 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+    .output-box .hl { color: var(--teal-200); }
+    .output-box .hl2 { color: var(--purple-400); }
+    .output-box .dim { color: var(--text-muted); }
+
+    /* COMPARISON TABLE */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+      max-width: 640px;
+    }
+    .compare-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .compare-card.winner { border-color: var(--teal-400); }
+    .compare-card .cc-title { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+    .compare-card.winner .cc-title { color: var(--teal-200); }
+    .compare-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 13px; }
+    .compare-row .cr-label { color: var(--text-muted); font-size: 12px; }
+    .compare-row .cr-val { color: var(--text-primary); font-family: var(--font-mono); }
+    .compare-row .cr-val.accent { color: var(--teal-200); }
+    .speedup-badge {
+      display: inline-block;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--teal-200);
+      background: rgba(29,158,117,0.12);
+      border: 0.5px solid rgba(29,158,117,0.30);
+      border-radius: 20px;
+      padding: 3px 12px;
+    }
+
+    /* USAGE */
+    .code-block {
+      font-family: var(--font-mono); font-size: 12px; background: #0a0a18;
+      border: 0.5px solid var(--border); border-radius: 6px; padding: 12px 16px;
+      margin-top: 10px; color: var(--purple-200); overflow-x: auto;
+    }
+
+    .link-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 7px;
+      border: 0.5px solid var(--border-accent); border-radius: 8px;
+      padding: 9px 18px; font-size: 13px; font-family: var(--font-sans);
+      color: var(--text-secondary); text-decoration: none; transition: all 0.15s;
+    }
+    .btn-outline:hover { border-color: var(--teal-400); color: var(--teal-200); }
+    .btn-outline i { font-size: 16px; }
+
+    footer {
+      padding: 24px 32px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 12px; border-top: 0.5px solid var(--border);
+    }
+    .footer-left { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .footer-left a { color: var(--purple-400); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">beyond<span>prime64</span>.org</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="framework.html">Framework</a></li>
+      <li><a href="microprime.html">MicroPrime</a></li>
+      <li><a href="m30x3.html" class="active">M30x3</a></li>
+      <li><a href="analysis.html">Analysis</a></li>
+      <li><a href="resources.html">Resources</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a><span>›</span>GC60-M30x3-suffix
+    </div>
+    <h1>Programs · <em>GC60-M30x3-suffix</em></h1>
+    <p class="subtitle">
+      Reaching and surpassing the 64-bit threshold for deterministic prime collection inside
+      arbitrary windows was one of the central objectives of the GC-60 project. That objective
+      was already achieved with microprime_suffix. GC60-M30x3-suffix is a new architectural
+      setup of the same system: the same magnitude 10²⁶ is now reached in 53 minutes,
+      and a window at 10²⁷ in just over 3 hours.
+    </p>
+    <div class="tags">
+      <span class="tag tag-teal">x3 parallel sieves</span>
+      <span class="tag tag-teal">~30% faster than microprime_suffix</span>
+      <span class="tag tag-purple">C++ · OpenMP</span>
+      <span class="tag tag-purple">__int128 arithmetic</span>
+      <span class="tag tag-purple">MIT license</span>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section">
+    <div class="section-label">Architecture</div>
+    <h2>The x3 principle</h2>
+    <p>
+      GC60-M30x3-suffix is built on the fundamental principle of GC-60: known divisors do not
+      actively scan — they passively project their footprint onto a fixed binary structure.
+    </p>
+    <p>
+      The key word in the name is <strong>x3</strong>: the binary is not one, but three.
+      <strong>Sieve_0</strong>, <strong>Sieve_10</strong>, and <strong>Sieve_20</strong> cover
+      disjoint residue classes derived from modulo 30, meaning each core works on a separate
+      territory — no overlap, no candidate checked twice. This is not simply parallelism:
+      it is a geometric partition of the candidate space that eliminates redundancy at the root.
+    </p>
+    <div class="x3-diagram">
+      <div class="x3-bin">
+        <div class="bin-name">Sieve_0</div>
+        <div class="bin-desc">Residues mod 30 — partition A</div>
+      </div>
+      <div class="x3-bin">
+        <div class="bin-name">Sieve_10</div>
+        <div class="bin-desc">Residues mod 30 — partition B</div>
+      </div>
+      <div class="x3-bin">
+        <div class="bin-name">Sieve_20</div>
+        <div class="bin-desc">Residues mod 30 — partition C</div>
+      </div>
+    </div>
+    <p style="margin-top:20px;">The program operates in three phases:</p>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-num">Phase 1</div>
+        <div>
+          <h4>Serial bootstrap sieve</h4>
+          <p>All primes up to the square root of the target base are found. Each prime is immediately evaluated: if at least one of its multiples falls in the macro-window (the union of all requested windows), it enters the useful divisors archive. No prime is skipped — all are traversed, only some are retained.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Phase 2</div>
+        <div>
+          <h4>Parallel M30 cycles</h4>
+          <p>Cycles are distributed across 16 threads via OpenMP. Each thread works on an independent block, builds its own bitmask, and executes the same check against the macro-window. This is the dominant phase — total time scales almost exclusively here, with the square root of the base.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Phase 3</div>
+        <div>
+          <h4>Passive screening</h4>
+          <p>With the complete archive, each window is processed independently. M30 candidates are marked by the collected divisors — the survivors are the primes. Each window produces a <code style="font-family:var(--font-mono);font-size:12px;color:var(--teal-200);">finestra_N.txt</code> file. Time: milliseconds.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HARDWARE -->
+  <section class="section">
+    <div class="section-label">Hardware</div>
+    <h2>Test machine</h2>
+    <p>All benchmarks measured empirically on real hardware. Mobile laptop processor — reported times are conservative relative to desktop or server hardware.</p>
+    <div class="hw-grid">
+      <div class="hw-item"><div class="hw-label">CPU</div><div class="hw-val">AMD Ryzen 7 4800U</div></div>
+      <div class="hw-item"><div class="hw-label">Cores / Threads</div><div class="hw-val">8 cores / 16 threads</div></div>
+      <div class="hw-item"><div class="hw-label">Base clock</div><div class="hw-val">1.80 GHz (boost 4.2)</div></div>
+      <div class="hw-item"><div class="hw-label">RAM</div><div class="hw-val">32 GB</div></div>
+    </div>
+  </section>
+
+  <!-- BENCHMARKS -->
+  <section class="section">
+    <div class="section-label">Benchmarks</div>
+    <h2>Measured execution times</h2>
+    <p>
+      The first two rows show the same magnitude 10²⁴ with different configurations: one window
+      in 203 seconds, four windows in 219 seconds. The overhead is minimal — about 16 extra
+      seconds to produce four times the primes. This demonstrates that window count barely
+      affects total time: the dominant cost is the sieve over M30 cycles, which depends
+      exclusively on the square root of the base.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Base</th>
+            <th>Root max</th>
+            <th>M30 cycles</th>
+            <th>Divisors</th>
+            <th>Windows</th>
+            <th>Primes</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>10²⁴</td><td>10¹² + 1</td><td>127,158</td><td>6,574</td><td>1</td><td>179</td><td class="highlight">203 s</td></tr>
+          <tr><td>10²⁴ (multistep)</td><td>10¹² + 1</td><td>127,158</td><td>22,712</td><td>4</td><td>729</td><td class="highlight">219 s</td></tr>
+          <tr><td>10²⁵</td><td>3.162×10¹²</td><td>402,106</td><td>101,665</td><td>2</td><td>3,470</td><td class="highlight">797 s</td></tr>
+          <tr><td>10²⁶</td><td>10¹³ + 1</td><td>1,271,567</td><td>105,384</td><td>2</td><td>3,260</td><td class="highlight">3,169 s (~53 min)</td></tr>
+          <tr><td>10²⁷</td><td>3.162×10¹³</td><td>4,021,045</td><td>109,340</td><td>2</td><td>3,199</td><td class="highlight">12,944 s (~3.6 h)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- REAL OUTPUT -->
+  <section class="section">
+    <div class="section-label">Program output</div>
+    <h2>Reading the results</h2>
+    <p>
+      This is the actual program output for a window at 10²⁴. The first notable figure is
+      <strong>Divisori raccolti: 6,574</strong> against <strong>Cicli M30: 127,158</strong>.
+      This is not a contradiction of determinism — the program traverses all 127,158 cycles
+      without exception (that is where the 203 seconds are). Only 6,574 divisors have at
+      least one multiple falling inside the window; the rest are traversed and consciously discarded.
+      The passive screening phase takes 0.002 seconds. All 179 primes form a
+      <strong>perfect verified sequence</strong>.
+    </p>
+    <div class="output-box">
+      <span class="dim">================================================</span><br>
+      <span class="hl">MicroPrime_M30x3 64-bit Ibrido</span><br>
+      <span class="dim">================================================</span><br>
+      Base partenza &nbsp;&nbsp;&nbsp;: <span class="hl2">1.000.000.000.000.000.000.000.000</span><br>
+      Ampiezza (W) &nbsp;&nbsp;&nbsp;&nbsp;: 10000<br>
+      Finestre &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 1<br>
+      Radice max &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 1.000.000.000.001<br>
+      Cicli M30 64-bit : <span class="hl2">127158</span><br>
+      Thread OMP &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 16<br>
+      <span class="dim">================================================</span><br>
+      Fase 2: Avvio setaccio su 127158 cicli...<br>
+      Divisori raccolti: <span class="hl">6.574</span> (203.007 s)<br>
+      <span class="dim">======= AVVIO SCREMATURA PASSIVA =======</span><br>
+      Generato [finestra_1.txt] -> Primi: <span class="hl">179</span><br>
+      Tempo scrematura : <span class="hl">0.0019588 s</span><br>
+      <span class="dim">================================================</span><br>
+      <span class="hl">Successo! Tutti i 179 numeri formano una sequenza perfetta di primi</span>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section class="section">
+    <div class="section-label">Comparison</div>
+    <h2>vs microprime_suffix at 10²⁶</h2>
+    <p>
+      Both programs do identical deterministic work — the divisors collected and primes found
+      are practically the same. The difference lies entirely in architectural efficiency.
+    </p>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="cc-title">microprime_suffix</div>
+        <div class="compare-row"><span class="cr-label">Base</span><span class="cr-val">10²⁶</span></div>
+        <div class="compare-row"><span class="cr-label">Windows</span><span class="cr-val">2</span></div>
+        <div class="compare-row"><span class="cr-label">Divisors</span><span class="cr-val">105,383</span></div>
+        <div class="compare-row"><span class="cr-label">Primes found</span><span class="cr-val">3,260</span></div>
+        <div class="compare-row"><span class="cr-label">Time</span><span class="cr-val">4,547 s (~77 min)</span></div>
+      </div>
+      <div class="compare-card winner">
+        <div class="cc-title">GC60-M30x3-suffix</div>
+        <div class="compare-row"><span class="cr-label">Base</span><span class="cr-val">10²⁶</span></div>
+        <div class="compare-row"><span class="cr-label">Windows</span><span class="cr-val">2</span></div>
+        <div class="compare-row"><span class="cr-label">Divisors</span><span class="cr-val">105,384</span></div>
+        <div class="compare-row"><span class="cr-label">Primes found</span><span class="cr-val">3,260</span></div>
+        <div class="compare-row"><span class="cr-label">Time</span><span class="cr-val accent">3,169 s (~53 min)</span></div>
+        <div><span class="speedup-badge">~30% faster</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USAGE -->
+  <section class="section">
+    <div class="section-label">Usage</div>
+    <h2>Compilation and usage</h2>
+    <p>No external libraries required — a C++ compiler with OpenMP support is sufficient.</p>
+    <p><strong>Linux</strong></p>
+    <div class="code-block">g++ -O3 main.cpp -o M30_suffix -fopenmp</div>
+    <p style="margin-top:16px;"><strong>Windows (Code::Blocks)</strong> — add the compiler flag:</p>
+    <div class="code-block">-fopenmp</div>
+    <p style="margin-top:16px;"><strong>Run syntax:</strong></p>
+    <div class="code-block">M30_suffix &lt;BASE&gt; &lt;STEP&gt; &lt;W&gt; &lt;QTA&gt;</div>
+    <p style="margin-top:16px;"><strong>Example</strong> — two windows at 10²⁶, width 100,000, step 100,000:</p>
+    <div class="code-block">M30_suffix 10^26 100000 100000 2</div>
+    <p style="margin-top:16px;">
+      BASE accepts <code style="font-family:var(--font-mono);font-size:12px;color:var(--purple-200);">10^N</code>,
+      <code style="font-family:var(--font-mono);font-size:12px;color:var(--purple-200);">10^N+offset</code>,
+      or arbitrary integers up to the theoretical limit of 10³⁸ (__int128).
+    </p>
+    <div class="link-row">
+      <a href="#" class="btn-outline"><i class="ti ti-brand-github"></i> GitHub repository</a>
+      <a href="#" class="btn-outline"><i class="ti ti-file-text"></i> Zenodo DOI</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      © 2025 Claudio Govi ·
+      <a href="https://zenodo.org" target="_blank">Zenodo</a> ·
+      <a href="https://github.com" target="_blank">GitHub</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy policy</a></li>
+    </ul>
+  </footer>
+
+</body>
+</html>

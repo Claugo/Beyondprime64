@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resources — BeyondPrime64</title>
+  <meta name="description" content="Source code, documentation, and publications for the GC-60 prime generation framework — microprime_suffix and GC60-M30x3-suffix." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple-200: #AFA9EC;
+      --purple-400: #7F77DD;
+      --purple-600: #534AB7;
+      --teal-200: #5DCAA5;
+      --teal-400: #1D9E75;
+      --bg-page: #09090f;
+      --bg-nav: #0d0d1a;
+      --bg-card: #111120;
+      --bg-card-hover: #161628;
+      --border: #1e1e3a;
+      --border-accent: #2e2e52;
+      --text-primary: #e8e4ff;
+      --text-secondary: #8888aa;
+      --text-muted: #555570;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background: var(--bg-page); color: var(--text-primary); line-height: 1.7; }
+
+    nav {
+      background: var(--bg-nav); border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 58px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--purple-200); text-decoration: none; }
+    .nav-logo span { color: var(--purple-400); }
+    .nav-links { display: flex; gap: 2px; list-style: none; }
+    .nav-links a { color: var(--text-secondary); font-size: 13px; padding: 6px 13px; border-radius: 6px; text-decoration: none; transition: all 0.15s; display: block; }
+    .nav-links a:hover, .nav-links a.active { color: var(--purple-200); background: rgba(127,119,221,0.08); }
+
+    .page-header {
+      padding: 56px 32px 44px; border-bottom: 0.5px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .page-header::before {
+      content: ''; position: absolute; top: -80px; right: -60px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(83,74,183,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .breadcrumb { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--purple-400); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+    .page-header h1 { font-size: 32px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 14px; }
+    .page-header h1 em { color: var(--purple-400); font-style: normal; }
+    .page-header .subtitle { font-size: 14.5px; color: var(--text-secondary); max-width: 600px; line-height: 1.8; }
+
+    .section { padding: 48px 32px; border-bottom: 0.5px solid var(--border); }
+    .section-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .section h2 { font-size: 21px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; letter-spacing: -0.01em; }
+    .section p { font-size: 14px; line-height: 1.85; color: var(--text-secondary); max-width: 640px; margin-bottom: 12px; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* RESOURCE CARDS */
+    .resource-cards { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; max-width: 680px; }
+    .resource-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.18s;
+    }
+    .resource-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateX(3px);
+    }
+    .resource-card .rc-icon {
+      font-size: 26px;
+      color: var(--purple-400);
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      background: rgba(83,74,183,0.10);
+      border: 0.5px solid rgba(83,74,183,0.25);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .resource-card.teal .rc-icon {
+      color: var(--teal-200);
+      background: rgba(29,158,117,0.10);
+      border-color: rgba(29,158,117,0.25);
+    }
+    .resource-card .rc-body { flex: 1; }
+    .resource-card .rc-title {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .resource-card .rc-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .resource-card .rc-url {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .resource-card .rc-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .resource-card:hover .rc-arrow { color: var(--purple-400); }
+    .resource-card.teal:hover .rc-arrow { color: var(--teal-200); }
+
+    /* AUTHOR SECTION */
+    .author-block {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 26px;
+      max-width: 540px;
+      margin-top: 24px;
+    }
+    .author-block .a-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em; }
+    .author-block .a-name { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    .author-block .a-role { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 16px; }
+    .author-block .a-orcid {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--teal-200);
+      background: rgba(29,158,117,0.08);
+      border: 0.5px solid rgba(29,158,117,0.25);
+      border-radius: 8px;
+      padding: 7px 14px;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .author-block .a-orcid:hover { background: rgba(29,158,117,0.15); }
+    .author-block .a-orcid-note {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 10px; line-height: 1.6;
+    }
+
+    footer {
+      padding: 24px 32px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 12px; border-top: 0.5px solid var(--border);
+    }
+    .footer-left { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .footer-left a { color: var(--purple-400); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">beyond<span>prime64</span>.org</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="framework.html">Framework</a></li>
+      <li><a href="microprime.html">MicroPrime</a></li>
+      <li><a href="m30x3.html">M30x3</a></li>
+      <li><a href="analysis.html">Analysis</a></li>
+      <li><a href="resources.html" class="active">Resources</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <div class="breadcrumb"><a href="index.html">Home</a><span>›</span>Resources</div>
+    <h1><em>Resources</em></h1>
+    <p class="subtitle">
+      Source code, documentation, benchmarks, and publications.
+      Everything needed to download, run, or study the GC-60 programs
+      is available through the links below.
+    </p>
+  </div>
+
+  <!-- REPOSITORIES -->
+  <section class="section">
+    <div class="section-label">Source code</div>
+    <h2>GitHub repositories</h2>
+    <p>
+      Both programs are published as open source under the MIT license.
+      Each repository includes the C++ source, precompiled executables,
+      input file format documentation, and usage instructions.
+    </p>
+    <div class="resource-cards">
+
+      <a href="https://github.com/Claugo/microprime-suffix" target="_blank" class="resource-card">
+        <div class="rc-icon"><i class="ti ti-brand-github"></i></div>
+        <div class="rc-body">
+          <div class="rc-title">microprime_suffix</div>
+          <div class="rc-desc">Segmented GC-60 sieve for prime window analysis beyond 10¹⁹. Two-window comparison, suffix analysis, six-panel charts. Benchmarked to 10²⁶.</div>
+          <div class="rc-url">github.com/Claugo/microprime-suffix</div>
+        </div>
+        <i class="ti ti-arrow-right rc-arrow"></i>
+      </a>
+
+      <a href="https://github.com/Claugo/GC60-M30x3-suffix" target="_blank" class="resource-card">
+        <div class="rc-icon"><i class="ti ti-brand-github"></i></div>
+        <div class="rc-body">
+          <div class="rc-title">GC60-M30x3-suffix</div>
+          <div class="rc-desc">Three-binary parallel architecture. Same deterministic output as microprime_suffix, ~30% faster. Reaches 10²⁶ in 53 minutes, 10²⁷ in 3.6 hours.</div>
+          <div class="rc-url">github.com/Claugo/GC60-M30x3-suffix</div>
+        </div>
+        <i class="ti ti-arrow-right rc-arrow"></i>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- AUTHOR / ORCID -->
+  <section class="section">
+    <div class="section-label">Author & publications</div>
+    <h2>Claudio Govi</h2>
+    <p>
+      Independent researcher. All publications, Zenodo archived releases,
+      and DOI-referenced versions of this work are listed under the author's
+      ORCID profile.
+    </p>
+    <div class="author-block">
+      <div class="a-label">// author</div>
+      <div class="a-name">Claudio Govi</div>
+      <div class="a-role">Independent researcher · GC-60 framework</div>
+      <a href="https://orcid.org/0009-0005-9020-0691" target="_blank" class="a-orcid">
+        <i class="ti ti-id-badge"></i>
+        ORCID · 0009-0005-9020-0691
+      </a>
+      <div class="a-orcid-note">
+        The ORCID profile links to all Zenodo releases, including versioned DOIs
+        for both programs and the technical documentation.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      © 2025 Claudio Govi ·
+      <a href="https://orcid.org/0009-0005-9020-0691" target="_blank">ORCID</a> ·
+      <a href="https://github.com/Claugo" target="_blank">GitHub</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy policy</a></li>
+    </ul>
+  </footer>
+
+  <!-- SITE NOTE -->
+  <div style="text-align:center; padding: 14px 32px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); border-top: 0.5px solid var(--border);">
+    This site was designed and built with the assistance of
+    <a href="https://www.anthropic.com" target="_blank" style="color: var(--purple-400); text-decoration: none;">Claude Sonnet 4.6</a>
+    · Anthropic AI
+  </div>
+
+</body>
+</html>

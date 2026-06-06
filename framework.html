@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The GC-60 Framework — BeyondPrime64</title>
+  <meta name="description" content="GC-60: a passive geometric projection framework for prime generation. From the mod 60 wheel to the three-binary M30x3 architecture." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple-200: #AFA9EC;
+      --purple-400: #7F77DD;
+      --purple-600: #534AB7;
+      --bg-page: #09090f;
+      --bg-nav: #0d0d1a;
+      --bg-card: #111120;
+      --border: #1e1e3a;
+      --border-accent: #2e2e52;
+      --text-primary: #e8e4ff;
+      --text-secondary: #8888aa;
+      --text-muted: #555570;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background: var(--bg-page); color: var(--text-primary); line-height: 1.7; }
+
+    /* NAV */
+    nav {
+      background: var(--bg-nav); border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 58px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--purple-200); text-decoration: none; }
+    .nav-logo span { color: var(--purple-400); }
+    .nav-links { display: flex; gap: 2px; list-style: none; }
+    .nav-links a { color: var(--text-secondary); font-size: 13px; padding: 6px 13px; border-radius: 6px; text-decoration: none; transition: all 0.15s; display: block; }
+    .nav-links a:hover, .nav-links a.active { color: var(--purple-200); background: rgba(127,119,221,0.08); }
+
+    /* PAGE HEADER */
+    .page-header {
+      padding: 56px 32px 44px; border-bottom: 0.5px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .page-header::before {
+      content: ''; position: absolute; top: -80px; right: -60px;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(83,74,183,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .breadcrumb { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--purple-400); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+    .page-header h1 { font-size: 32px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 14px; }
+    .page-header h1 em { color: var(--purple-400); font-style: normal; }
+    .page-header .subtitle { font-size: 14.5px; color: var(--text-secondary); max-width: 640px; line-height: 1.8; margin-bottom: 24px; }
+    .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { font-family: var(--font-mono); font-size: 11px; color: var(--purple-400); background: rgba(83,74,183,0.10); border: 0.5px solid rgba(83,74,183,0.30); border-radius: 20px; padding: 3px 12px; }
+
+    /* SECTION */
+    .section { padding: 48px 32px; border-bottom: 0.5px solid var(--border); }
+    .section-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .section h2 { font-size: 21px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; letter-spacing: -0.01em; }
+    .section h3 { font-size: 15px; font-weight: 600; color: var(--purple-200); margin: 28px 0 10px; }
+    .section p { font-size: 14px; line-height: 1.85; color: var(--text-secondary); max-width: 700px; margin-bottom: 14px; }
+    .section p strong { color: var(--purple-200); font-weight: 600; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* CONCEPT BOX */
+    .concept-box {
+      background: var(--bg-card); border: 0.5px solid var(--border-accent);
+      border-left: 2px solid var(--purple-600);
+      border-radius: 0 10px 10px 0;
+      padding: 20px 24px; margin: 20px 0; max-width: 700px;
+    }
+    .concept-box .mono-label { font-family: var(--font-mono); font-size: 11px; color: var(--purple-400); margin-bottom: 10px; letter-spacing: 0.05em; }
+    .concept-box p { font-size: 13.5px; line-height: 1.8; color: var(--text-secondary); margin: 0; max-width: none; }
+
+    /* WHEEL DISPLAY */
+    .wheel-block {
+      background: #050510; border: 0.5px solid var(--border-accent);
+      border-radius: 10px; padding: 22px 26px; margin: 20px 0;
+      max-width: 700px; font-family: var(--font-mono); font-size: 13px;
+      line-height: 2.2; overflow-x: auto;
+    }
+    .wheel-block .list-header { color: var(--text-muted); font-size: 11px; margin-bottom: 8px; letter-spacing: 0.05em; }
+    .wheel-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+    .wheel-idx { color: var(--text-muted); min-width: 28px; }
+    .wheel-base { color: var(--text-secondary); }
+    .wheel-offsets { color: var(--purple-200); }
+    .wheel-offsets .hl { color: var(--purple-400); font-weight: 500; }
+
+    /* CYCLE BLOCK */
+    .cycle-block {
+      background: #050510; border: 0.5px solid var(--border-accent);
+      border-radius: 10px; padding: 20px 24px; margin: 20px 0;
+      max-width: 700px; font-family: var(--font-mono); font-size: 12.5px;
+      line-height: 2; overflow-x: auto;
+    }
+    .cycle-block .c-label { color: var(--text-muted); font-size: 11px; margin-bottom: 10px; }
+    .cycle-row { display: flex; gap: 12px; }
+    .cycle-row .c-idx { color: var(--text-muted); min-width: 20px; }
+    .cycle-row .c-vals { color: var(--purple-400); }
+    .cycle-row.shifted .c-idx { color: #5DCAA5; }
+    .cycle-row.shifted .c-vals { color: #5DCAA5; }
+
+    /* EXAMPLE CALC */
+    .calc-block {
+      background: #050510; border: 0.5px solid var(--border-accent);
+      border-radius: 10px; padding: 20px 24px; margin: 20px 0;
+      max-width: 700px; font-family: var(--font-mono); font-size: 12.5px;
+      line-height: 2.1; overflow-x: auto;
+    }
+    .calc-block .c-comment { color: var(--text-muted); }
+    .calc-block .c-formula { color: var(--text-secondary); }
+    .calc-block .c-result { color: var(--purple-400); }
+    .calc-block .c-highlight { color: #e8e4ff; }
+
+    /* EVOLUTION TIMELINE */
+    .evolution {
+      display: flex; flex-direction: column; gap: 0;
+      margin-top: 24px; max-width: 680px;
+      border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .evo-item {
+      display: flex; gap: 0; align-items: stretch;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .evo-item:last-child { border-bottom: none; }
+    .evo-left {
+      background: rgba(83,74,183,0.08); border-right: 0.5px solid var(--border);
+      padding: 20px 20px; min-width: 130px; display: flex;
+      flex-direction: column; justify-content: center; gap: 4px;
+    }
+    .evo-name { font-family: var(--font-mono); font-size: 12px; color: var(--purple-400); font-weight: 500; }
+    .evo-mod { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+    .evo-right { padding: 18px 22px; }
+    .evo-right h4 { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    .evo-right p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin: 0; max-width: none; }
+
+    /* PASSIVE vs ACTIVE */
+    .compare-2col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-top: 20px; max-width: 680px;
+    }
+    .col-card {
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: 10px; padding: 18px 20px;
+    }
+    .col-card.passive { border-color: var(--purple-600); }
+    .col-card .col-title { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em; }
+    .col-card.passive .col-title { color: var(--purple-400); }
+    .col-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .col-card ul li { font-size: 13px; color: var(--text-secondary); line-height: 1.55; padding-left: 14px; position: relative; }
+    .col-card ul li::before { content: '—'; position: absolute; left: 0; color: var(--text-muted); }
+    .col-card.passive ul li::before { color: var(--purple-400); content: '›'; }
+
+    /* FOOTER */
+    footer {
+      padding: 24px 32px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 12px; border-top: 0.5px solid var(--border);
+    }
+    .footer-left { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .footer-left a { color: var(--purple-400); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">beyond<span>prime64</span>.org</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="framework.html" class="active">Framework</a></li>
+      <li><a href="microprime.html">MicroPrime</a></li>
+      <li><a href="m30x3.html">M30x3</a></li>
+      <li><a href="analysis.html">Analysis</a></li>
+      <li><a href="resources.html">Resources</a></li>
+    </ul>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="breadcrumb"><a href="index.html">Home</a><span>›</span>Framework</div>
+    <h1>The <em>GC-60</em> Framework</h1>
+    <p class="subtitle">
+      Instead of iterating over multiples and marking positions, GC-60 lets known divisors 
+      stamp their fixed cyclic pattern directly onto the structure, composites are never reached, 
+      they are already marked.
+    </p>
+    <div class="tags">
+      <span class="tag">Wheel factorization mod 60</span>
+      <span class="tag">Passive projection</span>
+      <span class="tag">16 residue offsets</span>
+      <span class="tag">Double infinite cycle</span>
+      <span class="tag">Deterministic</span>
+    </div>
+  </div>
+
+  <!-- THE FIXED RECEIVER -->
+  <section class="section">
+    <div class="section-label">The structure</div>
+    <h2>The mod 60 wheel, shifted by 10</h2>
+    <p>
+      The foundation of GC-60 is a fixed repeating structure: the integers mod 60, shifted by 10.
+      Within each block of 60 numbers, exactly <strong>16 positions</strong> can possibly be prime
+      (all others are divisible by 2, 3, or 5 by construction). These 16 offsets form the
+      passive receiver — the binary that simply waits to receive projections.
+    </p>
+
+    <div class="wheel-block">
+      <div class="list-header">// mod 60 + 10 — the 16 candidate offsets, repeated every 60 numbers</div>
+      <div class="wheel-row">
+        <span class="wheel-idx">n·60+10</span>
+        <span class="wheel-offsets">{ <span class="hl">1</span>, <span class="hl">3</span>, <span class="hl">7</span>, <span class="hl">9</span>, <span class="hl">13</span>, <span class="hl">19</span>, <span class="hl">21</span>, <span class="hl">27</span>, <span class="hl">31</span>, <span class="hl">33</span>, <span class="hl">37</span>, <span class="hl">39</span>, <span class="hl">43</span>, <span class="hl">49</span>, <span class="hl">51</span>, <span class="hl">57</span> }</span>
+      </div>
+    </div>
+
+    <p>
+      Primes 2, 3, and 5 are excluded from the module by definition.
+      The first useful prime is <strong>7</strong>, whose first relevant multiple is 7×7 = 49.
+      To locate 49 in the structure: (49 − 10) mod 60 = <strong>39</strong> → offset 39, list 0.
+    </p>
+
+    <div class="calc-block">
+      <span class="c-comment">// locating 7×7 = 49</span><br>
+      <span class="c-formula">(49 − 10) mod 60 = </span><span class="c-result">39</span><span class="c-formula"> → offset 39, list 0</span><br>
+      <span class="c-formula">0 × 60 + 10 + 39 = </span><span class="c-result">49</span> ✓<br><br>
+      <span class="c-comment">// locating 7×11 = 77</span><br>
+      <span class="c-formula">(77 − 10) mod 60 = </span><span class="c-result">7</span><span class="c-formula"> → offset 7, list 1</span><br>
+      <span class="c-formula">1 × 60 + 10 + 7 = </span><span class="c-result">77</span> ✓
+    </div>
+  </section>
+
+  <!-- THE CYCLE -->
+  <section class="section">
+    <div class="section-label">The projection</div>
+    <h2>The prime cycle — a mask over the structure</h2>
+    <p>
+      Every prime generates a <strong>cyclic pattern of offsets</strong> as its multiples land
+      on the mod 60 structure. For prime 7, the full cycle across seven consecutive lists is:
+    </p>
+
+    <div class="cycle-block">
+      <div class="c-label">// cycle of prime 7 on the mod 60 + 10 structure</div>
+      <div class="cycle-row"><span class="c-idx">0</span><span class="c-vals">[39]</span></div>
+      <div class="cycle-row"><span class="c-idx">1</span><span class="c-vals">[7, 21, 49]</span></div>
+      <div class="cycle-row"><span class="c-idx">2</span><span class="c-vals">[3, 31]</span></div>
+      <div class="cycle-row"><span class="c-idx">3</span><span class="c-vals">[13, 27]</span></div>
+      <div class="cycle-row"><span class="c-idx">4</span><span class="c-vals">[9, 37, 51]</span></div>
+      <div class="cycle-row"><span class="c-idx">5</span><span class="c-vals">[19, 33]</span></div>
+      <div class="cycle-row"><span class="c-idx">6</span><span class="c-vals">[1, 43, 57]</span></div>
+    </div>
+
+    <p>
+      This cycle is computed <strong>once</strong>. From that point on, there is no need to
+      calculate 7×7, 7×11, 7×13, 7×17… individually. The cycle is a mask that tells exactly
+      which offset in each list is hit by a multiple of 7.
+    </p>
+
+    <div class="concept-box">
+      <div class="mono-label">// the key insight</div>
+      <p>
+        The divisor does not scan. It projects. Given its cycle, it stamps its footprint
+        onto the fixed structure by simple monotonic translation — sliding the same repeating
+        pattern forward along the lists, indefinitely.
+      </p>
+    </div>
+  </section>
+
+  <!-- DOUBLE CYCLE -->
+  <section class="section">
+    <div class="section-label">The double cycle</div>
+    <h2>Translation along the number line</h2>
+    <p>
+      To reach any height on the number line, the prime's cycle is simply shifted forward
+      by the prime itself. For prime 7, shifting the cycle by 7 lists gives:
+    </p>
+
+    <div class="cycle-block">
+      <div class="c-label">// original cycle of prime 7 (lists 0–6)</div>
+      <div class="cycle-row"><span class="c-idx">0</span><span class="c-vals">[39]</span></div>
+      <div class="cycle-row"><span class="c-idx">1</span><span class="c-vals">[7, 21, 49]</span></div>
+      <div style="color:var(--text-muted); font-size:11px; margin: 4px 0 4px 28px;">...</div>
+      <div class="c-label" style="margin-top:12px;">// same cycle shifted by 7 (lists 7–13)</div>
+      <div class="cycle-row shifted"><span class="c-idx">7</span><span class="c-vals">[39]</span></div>
+      <div class="cycle-row shifted"><span class="c-idx">8</span><span class="c-vals">[7, 21, 49]</span></div>
+      <div style="color:#5DCAA5; font-size:11px; margin: 4px 0 4px 28px; opacity:0.6;">...</div>
+    </div>
+
+    <div class="calc-block">
+      <span class="c-comment">// verification: shifted cycle, list 7 and 8</span><br>
+      <span class="c-formula">7 × 60 + 10 + 39 = </span><span class="c-result">469</span><span class="c-formula"> (multiple of 7)</span><br>
+      <span class="c-formula">8 × 60 + 10 + 7 &nbsp;= </span><span class="c-result">497</span><span class="c-formula"> (multiple of 7)</span><br>
+      <span class="c-formula">8 × 60 + 10 + 21 = </span><span class="c-result">511</span><span class="c-formula"> (multiple of 7)</span><br>
+      <span class="c-formula">8 × 60 + 10 + 49 = </span><span class="c-result">539</span><span class="c-formula"> (multiple of 7)</span>
+    </div>
+
+    <p>
+      The result is a <strong>double infinite cycle</strong>: the mod 60 structure repeats
+      every 60 numbers; the prime's offset cycle repeats with its own period. To reach any
+      target height — 10²¹, 10²⁶, 10²⁷ — all that is needed is to translate the prime's
+      cycle along the mod 60 cycle until the target lists are reached.
+      <strong>No precomputed archive. No lookup table. No limit imposed by register width.</strong>
+    </p>
+  </section>
+
+  <!-- PASSIVE vs ACTIVE -->
+  <section class="section">
+    <div class="section-label">Core principle</div>
+    <h2>Passive projection vs active scanning</h2>
+    <p>
+      The distinction that defines GC-60 is not about speed — it is about the direction of the operation.
+    </p>
+    <div class="compare-2col">
+      <div class="col-card">
+        <div class="col-title">CLASSICAL SIEVE — active</div>
+        <ul>
+          <li>Iterates over candidates</li>
+          <li>For each candidate, computes its multiples and marks them</li>
+          <li>Composites are reached by traversal</li>
+          <li>Cost grows with the range</li>
+          <li>Bounded by register width (64-bit)</li>
+        </ul>
+      </div>
+      <div class="col-card passive">
+        <div class="col-title">GC-60 — passive</div>
+        <ul>
+          <li>Structure is fixed and static</li>
+          <li>Each divisor projects its own footprint</li>
+          <li>Composites are stamped, not found</li>
+          <li>Cost scales only with √target</li>
+          <li>Unbounded: works at any height</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVOLUTION -->
+  <section class="section">
+    <div class="section-label">Architectural evolution</div>
+    <h2>From GC-60 to M30x3</h2>
+    <p>
+      The framework evolved in three steps, each preserving the passive projection principle
+      while increasing efficiency and parallelism.
+    </p>
+    <div class="evolution">
+      <div class="evo-item">
+        <div class="evo-left">
+          <div class="evo-name">GC-60</div>
+          <div class="evo-mod">mod 60 + 10</div>
+        </div>
+        <div class="evo-right">
+          <h4>The base structure</h4>
+          <p>16 residue offsets repeating every 60 numbers. A single binary receives
+          the projections of all known divisors. This is the original formulation —
+          complete and deterministic from the first implementation.</p>
+        </div>
+      </div>
+      <div class="evo-item">
+        <div class="evo-left">
+          <div class="evo-name">M30</div>
+          <div class="evo-mod">mod 30</div>
+        </div>
+        <div class="evo-right">
+          <h4>Compact reformulation</h4>
+          <p>The same geometry restated on modulo 30 — a more compact representation
+          of the same 16 candidate positions, halving the period of the base cycle.
+          Same determinism, smaller footprint per cycle.</p>
+        </div>
+      </div>
+      <div class="evo-item">
+        <div class="evo-left">
+          <div class="evo-name">M30x3</div>
+          <div class="evo-mod">3 × mod 30</div>
+        </div>
+        <div class="evo-right">
+          <h4>Geometric partitioning</h4>
+          <p>The single binary becomes three: <strong>Sieve_0</strong>, <strong>Sieve_10</strong>,
+          and <strong>Sieve_20</strong> — each covering a disjoint partition of residue classes
+          mod 30. No candidate is ever checked twice. This is not simply parallelism:
+          it is a partition of the candidate space that eliminates redundancy at the root,
+          delivering approximately 30% faster execution than the single-binary implementation
+          at identical scale.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      © 2025 Claudio Govi ·
+      <a href="https://zenodo.org" target="_blank">Zenodo</a> ·
+      <a href="https://github.com" target="_blank">GitHub</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy policy</a></li>
+    </ul>
+  </footer>
+
+</body>
+</html>

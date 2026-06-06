@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prime Analysis — BeyondPrime64</title>
+  <meta name="description" content="Experimental prime analysis at scales beyond 64-bit: suffix behaviour, Hardy-Littlewood validation, gap matrices, and single-window statistics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple-200: #AFA9EC;
+      --purple-400: #7F77DD;
+      --purple-600: #534AB7;
+      --teal-200: #5DCAA5;
+      --teal-400: #1D9E75;
+      --amber: #E8A642;
+      --bg-page: #09090f;
+      --bg-nav: #0d0d1a;
+      --bg-card: #111120;
+      --border: #1e1e3a;
+      --border-accent: #2e2e52;
+      --text-primary: #e8e4ff;
+      --text-secondary: #8888aa;
+      --text-muted: #555570;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background: var(--bg-page); color: var(--text-primary); line-height: 1.7; }
+
+    nav {
+      background: var(--bg-nav); border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 58px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--purple-200); text-decoration: none; }
+    .nav-logo span { color: var(--purple-400); }
+    .nav-links { display: flex; gap: 2px; list-style: none; }
+    .nav-links a { color: var(--text-secondary); font-size: 13px; padding: 6px 13px; border-radius: 6px; text-decoration: none; transition: all 0.15s; display: block; }
+    .nav-links a:hover, .nav-links a.active { color: var(--purple-200); background: rgba(127,119,221,0.08); }
+
+    .page-header {
+      padding: 56px 32px 44px; border-bottom: 0.5px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .page-header::before {
+      content: ''; position: absolute; top: -80px; right: -60px;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(83,74,183,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .breadcrumb { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--purple-400); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+    .page-header h1 { font-size: 32px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 14px; }
+    .page-header h1 em { color: var(--purple-400); font-style: normal; }
+    .page-header .subtitle { font-size: 14.5px; color: var(--text-secondary); max-width: 660px; line-height: 1.8; }
+
+    /* OPEN DATA NOTE */
+    .open-note {
+      margin: 0; padding: 32px 32px;
+      border-bottom: 0.5px solid var(--border);
+      background: rgba(83,74,183,0.04);
+    }
+    .open-note-inner {
+      display: flex; gap: 20px; align-items: flex-start;
+      max-width: 800px;
+    }
+    .open-note-icon {
+      font-size: 28px; flex-shrink: 0; margin-top: 2px;
+    }
+    .open-note h3 { font-size: 14px; font-weight: 600; color: var(--purple-200); margin-bottom: 8px; }
+    .open-note p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.8; }
+    .open-note p strong { color: var(--text-primary); font-weight: 500; }
+
+    /* SECTION */
+    .section { padding: 48px 32px; border-bottom: 0.5px solid var(--border); }
+    .section-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .section h2 { font-size: 21px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; letter-spacing: -0.01em; }
+    .section p { font-size: 14px; line-height: 1.85; color: var(--text-secondary); max-width: 720px; margin-bottom: 12px; }
+    .section p strong { color: var(--purple-200); font-weight: 600; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* CHART CARD */
+    .chart-card {
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-top: 24px;
+    }
+    .chart-card img { width: 100%; display: block; }
+    .chart-card .chart-meta {
+      padding: 16px 20px; border-top: 0.5px solid var(--border);
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 16px; flex-wrap: wrap;
+    }
+    .chart-card .chart-caption { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); line-height: 1.6; }
+    .chart-card .chart-tag {
+      font-family: var(--font-mono); font-size: 11px; white-space: nowrap;
+      padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+    }
+    .tag-purple { color: var(--purple-400); background: rgba(83,74,183,0.10); border: 0.5px solid rgba(83,74,183,0.25); }
+    .tag-teal { color: var(--teal-200); background: rgba(29,158,117,0.10); border: 0.5px solid rgba(29,158,117,0.25); }
+    .tag-amber { color: var(--amber); background: rgba(232,166,66,0.10); border: 0.5px solid rgba(232,166,66,0.25); }
+
+    /* TWO CHARTS SIDE NOTE */
+    .chart-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    @media (max-width: 800px) { .chart-pair { grid-template-columns: 1fr; } }
+
+    /* FINDING BOX */
+    .finding {
+      background: var(--bg-card); border: 0.5px solid var(--border-accent);
+      border-left: 2px solid var(--purple-600);
+      border-radius: 0 10px 10px 0;
+      padding: 16px 22px; margin-top: 20px; max-width: 720px;
+    }
+    .finding.teal { border-left-color: var(--teal-400); }
+    .finding.amber { border-left-color: var(--amber); }
+    .finding .f-label { font-family: var(--font-mono); font-size: 11px; color: var(--purple-400); margin-bottom: 8px; }
+    .finding.teal .f-label { color: var(--teal-200); }
+    .finding.amber .f-label { color: var(--amber); }
+    .finding p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.75; margin: 0; max-width: none; }
+
+    /* SCREENSHOT WIDE */
+    .screenshot-card {
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-top: 24px;
+    }
+    .screenshot-card img { width: 100%; display: block; }
+    .screenshot-card .sc-caption {
+      padding: 14px 20px; border-top: 0.5px solid var(--border);
+      font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+    }
+    .screenshot-card .sc-caption strong { color: var(--purple-200); font-weight: 500; }
+
+    /* SAMPLE TABLE */
+    .table-wrap { overflow-x: auto; margin-top: 20px; border: 0.5px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
+    thead tr { background: #0d0d1a; border-bottom: 0.5px solid var(--border-accent); }
+    thead th { text-align: right; padding: 9px 14px; font-size: 10.5px; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 400; white-space: nowrap; }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-card); }
+    tbody td { padding: 9px 14px; color: var(--text-secondary); text-align: right; white-space: nowrap; }
+    tbody td:first-child { color: var(--purple-400); text-align: left; }
+    tbody td.pos { color: var(--teal-200); }
+    tbody td.neg { color: #E87070; }
+    .table-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 10px; }
+
+    /* GAP MATRIX SAMPLE */
+    .gap-matrix-wrap { overflow-x: auto; margin-top: 20px; border: 0.5px solid var(--border); border-radius: 10px; }
+    .gap-matrix-wrap table { min-width: 600px; }
+
+    footer {
+      padding: 24px 32px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 12px; border-top: 0.5px solid var(--border);
+    }
+    .footer-left { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .footer-left a { color: var(--purple-400); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">beyond<span>prime64</span>.org</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="framework.html">Framework</a></li>
+      <li><a href="microprime.html">MicroPrime</a></li>
+      <li><a href="m30x3.html">M30x3</a></li>
+      <li><a href="analysis.html" class="active">Analysis</a></li>
+      <li><a href="resources.html">Resources</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <div class="breadcrumb"><a href="index.html">Home</a><span>›</span>Analysis</div>
+    <h1>Prime <em>Analysis</em></h1>
+    <p class="subtitle">
+      Experimental results produced by microprime_suffix and GC60-M30x3-suffix
+      at scales ranging from 10²¹ to 10²⁶. Each dataset is a sample of what
+      these tools can produce — the analyses shown here are a starting point,
+      not a conclusion.
+    </p>
+  </div>
+
+  <!-- OPEN DATA NOTE -->
+  <div class="open-note">
+    <div class="open-note-inner">
+      <div class="open-note-icon">◈</div>
+      <div>
+        <h3>A note on open data</h3>
+        <p>
+          The primes collected by these programs are <strong>deterministic and verified</strong> —
+          every number in every output file has been confirmed as part of a complete, uninterrupted
+          prime sequence. What you do with them is entirely up to you.
+          A mathematician might look at gap distributions. A statistician at density deviations.
+          A programmer at the modular structure. The experiments shown here reflect the authors'
+          own interests — they are examples of a method, not a complete study.
+          <strong>Anyone can run the programs and explore different windows, scales, or questions.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: SUFFIX ANALYSIS -->
+  <section class="section">
+    <div class="section-label">Experiment type 1</div>
+    <h2>Suffix analysis — two windows compared</h2>
+    <p>
+      microprime_suffix compares two prime windows placed at different positions on the number line,
+      analysing how their prime distributions relate through shared suffixes and gap behaviour.
+      The same type of experiment at different scales reveals qualitatively different dynamics.
+    </p>
+
+    <div class="chart-pair">
+      <div>
+        <div class="chart-card">
+          <img src="suffix_data_2.png" alt="Suffix analysis at 10^16, W=510502 — negative ramp behaviour" />
+          <div class="chart-meta">
+            <div class="chart-caption">
+              prefix 10¹⁶ · W = 510,502<br>
+              Solo A: 9,488 · Solo B: 9,185 · Common: 1,173
+            </div>
+            <span class="chart-tag tag-purple">Negative ramp</span>
+          </div>
+        </div>
+        <div class="finding" style="margin-top:12px;">
+          <div class="f-label">// observed behaviour</div>
+          <p>The gap curve starts near zero and progressively drops to ~−5,000, then partially recovers. Window B accumulates a systematic lead over A throughout the entire window.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-card">
+          <img src="suffix_data_1.png" alt="Suffix analysis at 10^20, W=2749948 — oscillation behaviour" />
+          <div class="chart-meta">
+            <div class="chart-caption">
+              prefix 10²⁰ · W = 2,749,948<br>
+              Solo A: 54,612 · Solo B: 54,608 · Common: 2,307
+            </div>
+            <span class="chart-tag tag-teal">Oscillation</span>
+          </div>
+        </div>
+        <div class="finding teal" style="margin-top:12px;">
+          <div class="f-label">// observed behaviour</div>
+          <p>At higher scale, the gap oscillates symmetrically around zero — the two windows alternate without either prevailing. The gap distribution is bimodal, centred at zero.</p>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:28px;">
+      Both experiments share a <strong>scale-invariant modular signature</strong>: for each small
+      prime q, the dominant residue of gap(i) mod q equals (−W) mod q. This property appears
+      identically at 10¹⁶ and 10²⁰ — it depends only on the window width W, not on where
+      the windows sit on the number line. The transition scale between ramp and oscillation
+      behaviour remains an open question.
+    </p>
+  </section>
+
+  <!-- SECTION 2: SINGLE WINDOW -->
+  <section class="section">
+    <div class="section-label">Experiment type 2</div>
+    <h2>Single window statistics at 10²⁶</h2>
+    <p>
+      A single window of width 1,000,000 positioned at 10²⁶ — produced by MicroPrime v3
+      using the precomputed GC-60 archive. The output includes a complete prime list,
+      gap analysis, special prime pairs, and modular distribution.
+    </p>
+    <div class="screenshot-card">
+      <img src="microprime_v3_screenshot.png" alt="MicroPrime v3 statistics — single window at 10^26, 18957 primes found" />
+      <div class="sc-caption">
+        Interval: 10²⁶ · Width: 1,000,000 · <strong>18,957 primes found</strong> ·
+        Real density: <strong>1.9000%</strong> vs theoretical 1.8900% (+0.01%) ·
+        Twin pairs: 456 · Cousin pairs: 470 · Sexy pairs: 847 ·
+        Mod 60 distribution: uniform across all 16 offsets (~6.1–6.8%)
+      </div>
+    </div>
+    <div class="finding" style="margin-top:20px;">
+      <div class="f-label">// what this shows</div>
+      <p>
+        At 10²⁶ the prime density matches the theoretical prediction from the Prime Number Theorem
+        to within 0.01%. The mod 60 distribution is essentially flat — each of the 16 candidate
+        positions receives approximately 1/16 of the primes, confirming the geometric uniformity
+        of the GC-60 structure at extreme scale.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: HARDY-LITTLEWOOD -->
+  <section class="section">
+    <div class="section-label">Experiment type 3</div>
+    <h2>Hardy-Littlewood validation at 10²¹</h2>
+    <p>
+      200 consecutive window pairs at 10²¹ (W = 2,750,000), analysed against the
+      Hardy-Littlewood / Twin Prime Number theorem predictions. Each point in the chart
+      alternates between window A and window B of a pair.
+    </p>
+    <div class="chart-card">
+      <img src="exp17_grafico_scostamento_teorico.png" alt="Hardy-Littlewood validation at 10^21 — prime density and twin prime density deviation" />
+      <div class="chart-meta">
+        <div class="chart-caption">
+          200 window pairs · base 10²¹ · W = 2,750,000<br>
+          Top: prime density deviation · Bottom: twin prime density deviation
+        </div>
+        <span class="chart-tag tag-amber">Hardy-Littlewood</span>
+      </div>
+    </div>
+    <div class="finding amber" style="margin-top:20px;">
+      <div class="f-label">// what this shows</div>
+      <p>
+        Prime density (top panel) stays within ±1% of the Hardy-Littlewood prediction across
+        all 200 windows — practically indistinguishable from the theoretical line.
+        Twin prime density (bottom panel) oscillates more widely but remains within ±7%,
+        consistent with the expected statistical variance at this window size.
+        This is empirical confirmation of Hardy-Littlewood at a scale never previously
+        measured with deterministic methods.
+      </p>
+    </div>
+
+    <p style="margin-top:28px;">
+      The underlying data for this chart — one row per window pair — illustrates the type
+      of structured output these programs produce. A sample of the first five pairs:
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Start A</th>
+            <th>Primes A</th>
+            <th>Theoretical</th>
+            <th>Deviation A</th>
+            <th>Primes B</th>
+            <th>Deviation B</th>
+            <th>Common</th>
+            <th>Density %</th>
+            <th>HL theory %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>suffix_data_1</td>
+            <td>10²¹</td>
+            <td>56,919</td>
+            <td>56,872</td>
+            <td class="pos">+47</td>
+            <td>56,915</td>
+            <td class="pos">+43</td>
+            <td>2,307</td>
+            <td>4.05</td>
+            <td>4.05</td>
+          </tr>
+          <tr>
+            <td>suffix_data_2</td>
+            <td>10²¹ + W</td>
+            <td>56,898</td>
+            <td>56,872</td>
+            <td class="pos">+26</td>
+            <td>56,861</td>
+            <td class="neg">−11</td>
+            <td>2,254</td>
+            <td>3.96</td>
+            <td>4.05</td>
+          </tr>
+          <tr>
+            <td>suffix_data_3</td>
+            <td>10²¹ + 2W</td>
+            <td>57,132</td>
+            <td>56,872</td>
+            <td class="pos">+260</td>
+            <td>56,859</td>
+            <td class="neg">−13</td>
+            <td>2,279</td>
+            <td>3.99</td>
+            <td>4.05</td>
+          </tr>
+          <tr>
+            <td>suffix_data_4</td>
+            <td>10²¹ + 3W</td>
+            <td>56,926</td>
+            <td>56,872</td>
+            <td class="pos">+54</td>
+            <td>57,086</td>
+            <td class="pos">+214</td>
+            <td>2,290</td>
+            <td>4.02</td>
+            <td>4.05</td>
+          </tr>
+          <tr>
+            <td>suffix_data_5</td>
+            <td>10²¹ + 4W</td>
+            <td>56,853</td>
+            <td>56,872</td>
+            <td class="neg">−19</td>
+            <td>56,737</td>
+            <td class="neg">−135</td>
+            <td>2,250</td>
+            <td>3.96</td>
+            <td>4.05</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">// sample — 5 of 200 rows · full dataset produced by microprime_suffix + analisi_suffix.py</p>
+  </section>
+
+  <!-- SECTION 4: GAP MATRIX -->
+  <section class="section">
+    <div class="section-label">Experiment type 4</div>
+    <h2>Gap frequency matrix across 200 windows</h2>
+    <p>
+      For each of 200 consecutive windows at 10²¹, the primes are grouped by gap size —
+      how many pairs of consecutive primes are separated by 2, 4, 6, 8, 10, and so on.
+      Each row is one window; each column is a gap class. The result is a matrix that shows
+      how gap frequencies vary window by window, and which gap sizes dominate at this scale.
+    </p>
+    <div class="finding" style="margin-top: 0;">
+      <div class="f-label">// what this shows</div>
+      <p>
+        Small gaps (p_6, p_12, p_30) consistently dominate across all windows.
+        Large gaps (p_84, p_90) are rare but appear with surprising regularity —
+        their frequency per window is nearly constant despite the randomness of individual primes.
+        This regularity is itself a subject for further investigation.
+      </p>
+    </div>
+
+    <p style="margin-top:20px;">A sample of the first five windows and first eight gap classes:</p>
+    <div class="gap-matrix-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Window</th>
+            <th>p_2 (gap=2)</th>
+            <th>p_4</th>
+            <th>p_6</th>
+            <th>p_8</th>
+            <th>p_10</th>
+            <th>p_12</th>
+            <th>p_14</th>
+            <th>p_16</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>W_1</td><td>2924</td><td>3048</td><td>3090</td><td>3026</td><td>2955</td><td>2955</td><td>2923</td><td>2966</td></tr>
+          <tr><td>W_2</td><td>2653</td><td>2686</td><td>2617</td><td>2589</td><td>2647</td><td>2616</td><td>2680</td><td>2594</td></tr>
+          <tr><td>W_3</td><td>2435</td><td>2480</td><td>2410</td><td>2429</td><td>2467</td><td>2432</td><td>2510</td><td>2512</td></tr>
+          <tr><td>W_4</td><td>2353</td><td>2391</td><td>2415</td><td>2369</td><td>2411</td><td>2394</td><td>2272</td><td>2279</td></tr>
+          <tr><td>W_5</td><td>2124</td><td>2028</td><td>2091</td><td>2077</td><td>2146</td><td>2058</td><td>2136</td><td>2150</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">// sample — 5 of 200 windows · 8 of ~50 gap classes shown · full matrix produced by microprime_suffix</p>
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      © 2025 Claudio Govi ·
+      <a href="https://zenodo.org" target="_blank">Zenodo</a> ·
+      <a href="https://github.com" target="_blank">GitHub</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy policy</a></li>
+    </ul>
+  </footer>
+
+</body>
+</html>
